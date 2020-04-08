@@ -1,6 +1,6 @@
 package com.chargebee.internal
 
-import spray.json.JsObject
+import org.json.JSONObject
 
 object ClazzUtil {
 
@@ -22,7 +22,7 @@ object ClazzUtil {
 	def toCamelCase(names: Seq[String]): String = names.map(_.toLowerCase.capitalize).mkString
 
 	@throws(classOf[RuntimeException])
-	def createInstance[T](clazz: Class[T], jsObject: JsObject): T = clazz.getDeclaredConstructor(JsObject.getClass).newInstance(jsObject)
+	def createInstance[T](clazz: Class[T], jsObject: JSONObject): T = clazz.getDeclaredConstructor(classOf[JSONObject]).newInstance(jsObject)
 
 	@throws(classOf[RuntimeException])
 	def createNumberInstance[T](clazz: Class[T], value: String): T = clazz.getConstructor(classOf[String]).newInstance(value)

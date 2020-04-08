@@ -1,9 +1,9 @@
 package com.chargebee.internal
 
-import spray.json.JsObject
+import org.json.JSONObject
 
-case class ResultBase(jsonObject: JsObject) {
+case class ResultBase(jsonObject: JSONObject) {
 
-	def jsonObj: JsObject = this.jsonObject
+	def jsonObj: JSONObject = this.jsonObject
 
 }

@@ -1,10 +1,10 @@
 package com.chargebee
 
-import spray.json._
+import org.json.JSONObject
 
 trait ApiResponse {
 
 	def httpCode: Int
-	def jsonResponse: JsObject
+	def jsonResponse: JSONObject
 
 }

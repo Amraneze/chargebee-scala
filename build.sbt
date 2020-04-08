@@ -5,6 +5,6 @@ version := "0.1"
 scalaVersion := "2.13.1"
 
 libraryDependencies ++= Seq(
-	"io.spray" %%  "spray-json" % "1.3.5",
+	"org.json" % "json" % "20190722",
 	"commons-codec" % "commons-codec" % "1.14"
 )

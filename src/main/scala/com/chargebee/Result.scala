@@ -1,12 +1,12 @@
 package com.chargebee
 
 import com.chargebee.internal.ResultBase
-import spray.json.JsObject
+import org.json.JSONObject
 
-final class Result(httpStatusCode: Int, jsonObject: JsObject) extends ResultBase(jsonObject) with ApiResponse {
+final class Result(httpStatusCode: Int, jsonObject: JSONObject) extends ResultBase(jsonObject) with ApiResponse {
 
 	override def httpCode: Int = this.httpStatusCode
 
-	override def jsonResponse: JsObject = jsonObj
+	override def jsonResponse: JSONObject = jsonObj
 
 }

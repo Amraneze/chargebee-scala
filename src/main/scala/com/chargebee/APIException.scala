@@ -1,14 +1,14 @@
 package com.chargebee
 
-import spray.json.JsObject
+import org.json.JSONObject
 
 sealed abstract class Exception(msg: String) extends RuntimeException(msg)
-class APIExceptionJsObject(jsonObj: JsObject) extends Exception(jsonObj.getFields("message").mkString)
+class APIExceptionJSONObject(jsonObj: JSONObject) extends Exception(jsonObj.getString("message").mkString)
 class APIExceptionString(msg: String) extends Exception(msg)
 
 class APIException(msg: String) extends RuntimeException(msg) {
 
-	var jsonObj: JsObject = _
+	var jsonObj: JSONObject = _
 	var httpStatusCode = 0
 	var `type`: String = _
 	var param: String = _
@@ -34,17 +34,17 @@ class APIException(msg: String) extends RuntimeException(msg) {
 	 */
 	@deprecated var message: String = _
 
-	def this(httpStatusCode: Int, jsonObj: JsObject) = {
-		this(jsonObj.getFields("message").mkString)
+	def this(httpStatusCode: Int, jsonObj: JSONObject) = {
+		this(jsonObj.getString("message"))
 		this.jsonObj = jsonObj
 		this.httpStatusCode = httpStatusCode
-		this.apiErrorCode = jsonObj.getFields("api_error_code").mkString
-		this.`type` = jsonObj.getFields("type").mkString
-		this.param = jsonObj.getFields("param").mkString
+		this.apiErrorCode = jsonObj.getString("api_error_code")
+		this.`type` = jsonObj.optString("type")
+		this.param = jsonObj.optString("param")
 
 		this.httpCode = httpStatusCode
-		this.code = jsonObj.getFields("error_code").mkString
-		this.message = jsonObj.getFields("error_msg").mkString
+		this.code = jsonObj.getString("error_code")
+		this.message = jsonObj.getString("error_msg")
 	}
 
 	override def toString: String = this.jsonObj.toString
@@ -53,5 +53,5 @@ class APIException(msg: String) extends RuntimeException(msg) {
 }
 
 object APIException {
-	def apply(msg: Int, jsonObj: JsObject) = new APIException(msg, jsonObj)
+	def apply(msg: Int, jsonObj: JSONObject) = new APIException(msg, jsonObj)
 }

@@ -1,6 +1,6 @@
 package com.chargebee.exceptions
 
 import com.chargebee.APIException
-import spray.json.JsObject
+import org.json.JSONObject
 
-case class InvalidRequestException(httpResponseCode: Int, jsObject: JsObject) extends APIException(httpResponseCode, jsObject)
+case class InvalidRequestException(httpResponseCode: Int, jsObject: JSONObject) extends APIException(httpResponseCode, jsObject)

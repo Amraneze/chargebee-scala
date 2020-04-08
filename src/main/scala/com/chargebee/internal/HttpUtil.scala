@@ -2,11 +2,12 @@ package com.chargebee.internal
 
 import java.io.IOException
 import java.net.{HttpURLConnection, URL, URLConnection, URLEncoder}
+import java.util.StringJoiner
 
 import com.chargebee.exceptions.{InvalidRequestException, OperationFailedException, PaymentException}
 import com.chargebee.{APIException, Environment, ListResult, Result}
 import org.apache.commons.codec.binary.Base64
-import spray.json.{JsObject, JsString}
+import org.json.{JSONException, JSONObject}
 
 private[internal] object HttpUtil {
 
@@ -16,9 +17,9 @@ private[internal] object HttpUtil {
 
 	private[internal] class Resp {
 		private[internal] var httpCode: Int = 0
-		private[internal] var jsonContent: JsObject = _
+		private[internal] var jsonContent: JSONObject = _
 
-		def this(httpCode: Int, jsonContent: JsObject) {
+		def this(httpCode: Int, jsonContent: JSONObject) {
 			this()
 			this.httpCode = httpCode
 			this.jsonContent = jsonContent
@@ -38,24 +39,32 @@ private[internal] object HttpUtil {
 	}
 
 	@throws[IOException]
-	def post(url: String, params: Params, headers: Map[String, String], env: Environment): Result = doFormSubmit(url, POST, toQueryStr(params), headers, env);
+	def getList(url: String, params: Params, headers: Map[String, String], env: Environment): ListResult = {
+		var newUrl = url
+		if (params != null && params.isNotEmpty) newUrl += s"?${toQueryStr(params, isListReq = true)}" // fixme: what about url size restrictions ??
+		val conn: HttpURLConnection = createConnection(url, GET, headers, env)
+		sendRequest(conn).toListResult
+	}
+
+	@throws[IOException]
+	def post(url: String, params: Params, headers: Map[String, String], env: Environment): Result = doFormSubmit(url, POST, toQueryStr(params), headers, env)
 
 	def toQueryStr(params: Params): String = toQueryStr(params, isListReq = false)
 
 	def toQueryStr(map: Params, isListReq: Boolean): String = {
-		var str: String = _
+		val str: StringJoiner = new StringJoiner("&")
 		map.setOfEntries().foreach(entry => {
 			if (entry._2.getClass.isAssignableFrom(classOf[List[String]])) {
 				val list: List[String] = entry._2.asInstanceOf[List[String]]
 				if (isListReq) {
-					str += enc(s"${entry._1}=${enc(if (list.isEmpty) "" else list.toString)}")
+					str.add(enc(s"${entry._1}=${enc(if (list.isEmpty) "" else list.toString)}"))
 				}
-				list.zipWithIndex.foreach(element => str += enc(s"${entry._1}[${element._2}]=${enc(if (element._1 == null) "" else element._1)}"))
+				list.zipWithIndex.foreach(element => str.add(enc(s"${entry._1}[${element._2}]=${enc(if (element._1 == null) "" else element._1)}")))
 			} else {
-				str += enc(s"${entry._1}=${enc(entry._2.asInstanceOf[String])}")
+				str.add(enc(s"${entry._1}=${enc(entry._2.asInstanceOf[String])}"))
 			}
 		})
-		str.mkString("&")
+		str.toString
 	}
 
 	@throws[RuntimeException]
@@ -98,13 +107,13 @@ private[internal] object HttpUtil {
 		if (httpRespCode == HttpURLConnection.HTTP_NO_CONTENT) throw new RuntimeException("Got http_no_content response")
 		val isError: Boolean = httpRespCode < 200 || httpRespCode > 299
 		val content: String = getContentAsString(conn, isError)
-		val jsResp: JsObject = getContentAsJSON(content)
+		val jsResp: JSONObject = getContentAsJSON(content)
 		if (isError) try {
-			jsResp.getFields("api_error_code")
-			jsResp.getFields("type").toString match {
-				case "payment" => throw new PaymentException(httpRespCode, jsResp)
-				case "operation_failed" => throw new OperationFailedException(httpRespCode, jsResp)
-				case "invalid_request" => throw new InvalidRequestException(httpRespCode, jsResp)
+			jsResp.getString("api_error_code")
+			jsResp.optString("type") match {
+				case "payment" => throw PaymentException(httpRespCode, jsResp)
+				case "operation_failed" => throw OperationFailedException(httpRespCode, jsResp)
+				case "invalid_request" => throw InvalidRequestException(httpRespCode, jsResp)
 				case _ => throw new APIException(httpRespCode, jsResp)
 			}
 		} catch {
@@ -141,8 +150,8 @@ private[internal] object HttpUtil {
 
 	private def getAuthValue(config: Environment) = "Basic " + Base64.encodeBase64String(s"$config.apiKey:".getBytes).replaceAll("\r?", "").replaceAll("\n?", "")
 
-	@throws[Exception]
-	private def getContentAsJSON(content: String): JsObject = new JsString(content).asJsObject
+	@throws[JSONException]
+	private def getContentAsJSON(content: String): JSONObject = new JSONObject(content)
 
 	private def getContentAsString(conn: HttpURLConnection, error: Boolean): String = conn.getContent.toString
 

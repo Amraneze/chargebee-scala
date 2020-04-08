@@ -3,7 +3,7 @@ package com.chargebee.internal
 import java.sql.Timestamp
 import java.util.Map.Entry
 
-import spray.json.{JsArray, JsObject}
+import org.json.{JSONArray, JSONObject}
 
 import scala.collection.immutable.HashMap
 
@@ -66,12 +66,14 @@ object Params {
 			value.toString.toLowerCase
 		} else if (clazz.isAssignableFrom(classOf[Timestamp])) {
 			asUnixTimestamp(value.asInstanceOf[Timestamp]).toString
+		} else if (clazz.isAssignableFrom(classOf[Iterable[_]])) {
+			value.asInstanceOf[Iterable[_]].map(obj => toValStr(obj.toString))
 		} else if (clazz.isAssignableFrom(classOf[List[_]])) {
 			value.asInstanceOf[List[_]].map(obj => toValStr(obj.toString))
-		} else if (clazz.isAssignableFrom(JsObject.getClass)) {
-			value.asInstanceOf[JsObject].toString
-		} else if (clazz.isAssignableFrom(JsArray.getClass)) {
-			value.asInstanceOf[JsArray].toString
+		} else if (clazz.isAssignableFrom(classOf[JSONObject])) {
+			value.asInstanceOf[JSONObject].toString
+		} else if (clazz.isAssignableFrom(classOf[JSONArray])) {
+			value.asInstanceOf[JSONArray].toString
 		} else throw new RuntimeException(s"Type [ ${clazz.getName} ] not handled")
 	}
 

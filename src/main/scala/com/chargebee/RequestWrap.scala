@@ -4,7 +4,7 @@ import java.util.concurrent.Callable
 
 import com.chargebee.internal.RequestBase
 
-sealed abstract class RequestWrap[T <: RequestBase[T]] extends Callable[ApiResponse] {
+abstract class RequestWrap[T <: RequestBase[T]] extends Callable[ApiResponse] {
 
 	var env: Environment = _
 	var request: T = _

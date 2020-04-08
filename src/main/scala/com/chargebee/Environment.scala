@@ -27,8 +27,7 @@ class Environment {
 	 */
 	var readTimeout: Int = Integer.getInteger("com.chargebee.api.http.timeout.read", 60000)
 
-	private[internal] var apiBaseUrl = _
-
+	private[internal] var apiBaseUrl: String = ""
 
 	private[internal] var reqInterceptor: RequestInterceptor = _
 
@@ -49,17 +48,12 @@ class Environment {
 	def configure(siteName: String, apikey: String): Unit = Environment.defaultEnv = new Environment(siteName, apikey)
 
 	def reqInterceptor(reqInterceptor: RequestInterceptor): Unit = {
-		defaultConfig.reqInterceptor = reqInterceptor
+		Environment.defaultConfig.reqInterceptor = reqInterceptor
 	}
 
-	def reqInterceptor: RequestInterceptor = reqInterceptor
+	def _reqInterceptor: RequestInterceptor = reqInterceptor
 
-	def defaultConfig: Environment = {
-		if (Option(Environment.defaultEnv).isDefined) throw new RuntimeException("The default environment has not been configured")
-		Environment.defaultEnv
-	}
-
-	def apiBaseUrl: String = this.apiBaseUrl
+	def _apiBaseUrl: String = this.apiBaseUrl
 
 }
 
@@ -74,4 +68,8 @@ private[internal] object Environment {
 
 	var defaultEnv: Environment = _ // singleton
 
+	def defaultConfig: Environment = {
+		if (Option(Environment.defaultEnv).isDefined) throw new RuntimeException("The default environment has not been configured")
+		Environment.defaultEnv
+	}
 }
